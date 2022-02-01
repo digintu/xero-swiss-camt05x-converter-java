@@ -48,9 +48,10 @@
   <component name="ChangeListManager">
     <list default="true" id="c0899599-46b0-4e56-9415-0f7836be1ff2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/xero/app/Authorization.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/xero/app/Authorization.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/xero/app/Callback.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/xero/app/Callback.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/xero/app/TokenRefresh.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/xero/app/TokenRefresh.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WebContent/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/WebContent/WEB-INF/web.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WebContent/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/WebContent/import.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WebContent/login.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/WebContent/index.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/xero/app/AuthenticatedResource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/xero/app/AuthenticatedResource.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -384,7 +385,14 @@
       <option name="project" value="LOCAL" />
       <updated>1643741470579</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Remove hardcoded identifiers">
+      <created>1643741536368</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1643741536368</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -425,7 +433,8 @@
     <MESSAGE value="Disable used option" />
     <MESSAGE value="Preview datas" />
     <MESSAGE value="Make all work" />
-    <option name="LAST_COMMIT_MESSAGE" value="Make all work" />
+    <MESSAGE value="Remove hardcoded identifiers" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove hardcoded identifiers" />
   </component>
   <component name="WindowStateProjectService">
     <state x="443" y="188" width="1024" height="845" key="#Project_Structure" timestamp="1643173018631">
@@ -452,10 +461,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="668" y="302" width="573" height="679" key="#com.intellij.j2ee.appServerIntegrations.ApplicationServersConfigurable/0.27.1920.1053@0.27.1920.1053" timestamp="1643172922895" />
-    <state x="428" y="176" width="1054" height="904" key="CommitChangelistDialog2" timestamp="1643741470354">
+    <state x="428" y="176" width="1054" height="904" key="CommitChangelistDialog2" timestamp="1643741536288">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="428" y="176" width="1054" height="904" key="CommitChangelistDialog2/0.27.1920.1053@0.27.1920.1053" timestamp="1643741470354" />
+    <state x="428" y="176" width="1054" height="904" key="CommitChangelistDialog2/0.27.1920.1053@0.27.1920.1053" timestamp="1643741536288" />
     <state x="100" y="125" width="1720" height="855" key="DiffContextDialog" timestamp="1643719232330">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -524,10 +533,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="449" y="187" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1641976870042" />
-    <state x="555" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1643183508544">
+    <state x="555" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1643741562467">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="555" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/0.27.1920.1053@0.27.1920.1053" timestamp="1643183508544" />
+    <state x="555" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/0.27.1920.1053@0.27.1920.1053" timestamp="1643741562467" />
     <state x="567" y="269" width="775" height="566" key="VcsDiffUtil.ChangesDialog" timestamp="1643717727388">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>

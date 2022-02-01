@@ -253,7 +253,7 @@ public class AuthenticatedResource extends HttpServlet {
             return;
         }
 
-        this.getServletContext().getRequestDispatcher("/index.jsp").forward(request, response);
+        this.getServletContext().getRequestDispatcher("/import.jsp").forward(request, response);
     }
 
     @SuppressWarnings("null")
