@@ -115,7 +115,6 @@ public class ProcessingCamtFile extends HttpServlet {
 				amount.put("value", ntry.getAmt().getValue().toString());
 				amount.put("targetColumn", "transactionAmount");
 				item.add(amount);
-
 				Map<String, String> payee = new HashMap<String, String>();
 				payee.put("label", "Payee");
 				payee.put("fieldName", "payee");
