@@ -42,7 +42,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 })
 @XmlRootElement(name = "Document")
 public class Document {
-	
+
 	@XmlElement(name = "BkToCstmrStmt")
 	protected BankToCustomerStatementV02 bkToCstmrStmt;
 
@@ -81,6 +81,4 @@ public class Document {
 		this.bkToCstmrDbtCdtNtfctn = bkToCstmrDbtCdtNtfctn;
 	}
     
-    
-
 }

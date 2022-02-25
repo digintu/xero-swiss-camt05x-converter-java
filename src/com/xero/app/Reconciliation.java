@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.xero.api.ApiClient;
 import com.xero.api.client.AccountingApi;
+import com.xero.app.models.CreditDebitCode;
 import com.xero.app.models.CustomEntry;
 import com.xero.app.models.CustomEntryItem;
 import com.xero.models.accounting.Account;
@@ -146,14 +147,14 @@ public class Reconciliation extends HttpServlet {
 			}
 		}
 
-/*		for (CustomEntry customEntry : customEntryList) {
+		for (CustomEntry customEntry : customEntryList) {
 			for (CustomEntryItem customEntryItem : customEntry.getCustomEntryItems()) {
 				if (customEntryItem.getTargetColumn() != null) {
 					System.out.println("Le " + customEntryItem.getLabel() + " est définie à "
 							+ customEntryItem.getTargetColumn() + " et sa valeur est " + customEntryItem.getValue());
 				}
 			}
-		}*/
+		}
 
 		List<Account> accountList = (List<Account>) session.getAttribute("accountsUnparsed");
 
@@ -180,31 +181,43 @@ public class Reconciliation extends HttpServlet {
 			BankTransactions bts = new BankTransactions();
 
 			for (CustomEntry customEntry : customEntryList) {
-				CustomEntryItem amountCode = customEntry.getCustomEntryItems().stream()
-						.filter(cei -> "amountCode".equals(cei.getTargetColumn())).findFirst().orElse(null);
 				CustomEntryItem unitAmount = customEntry.getCustomEntryItems().stream()
 						.filter(cei -> "transactionAmount".equals(cei.getTargetColumn())).findFirst().orElse(null);
 				CustomEntryItem description = customEntry.getCustomEntryItems().stream()
 						.filter(cei -> "description".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem analysisCode = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "analysisCode".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem transactionDate = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "transactionDate".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem reference = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "reference".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem payee = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "payee".equals(cei.getTargetColumn())).findFirst().orElse(null);
 
-				if (amountCode != null && unitAmount != null && description != null) {
+				if (payee !=null && reference != null && transactionDate != null && analysisCode != null && unitAmount != null && description != null) {
 					List<LineItem> lineItems = new ArrayList<>();
 
 					LineItem li = new LineItem();
-					li.setAccountCode(amountCode.getValue());
 					li.setDescription(description.getValue());
 					li.setUnitAmount(Double.valueOf(unitAmount.getValue()));
 					lineItems.add(li);
+					
+					Contact contact = new Contact();
+					contact.setName(payee.getValue());
 
 					BankTransaction bt = new BankTransaction();
 					bt.setBankAccount(bankAcct);
 					bt.setContact(useContact);
 					bt.setLineItems(lineItems);
-					bt.setType(Double.valueOf(unitAmount.getValue()) < 0
+					bt.setContact(contact);
+					bt.setReference(reference.getValue());
+					bt.setDate(transactionDate.getValue());
+					bt.setType(analysisCode.getValue().equals(CreditDebitCode.DBIT.toString())
 							? com.xero.models.accounting.BankTransaction.TypeEnum.SPEND
 							: com.xero.models.accounting.BankTransaction.TypeEnum.RECEIVE);
 
 					bts.addBankTransactionsItem(bt);
+					System.out.println(bt.toString());
 				}
 			}
 

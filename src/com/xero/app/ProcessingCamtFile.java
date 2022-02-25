@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 import com.xero.api.ApiClient;
 import com.xero.api.client.AccountingApi;
 import com.xero.api.client.IdentityApi;
+import com.xero.app.models.CreditDebitCode;
 import com.xero.app.models.Document;
 import com.xero.app.models.ObjectFactory;
 import com.xero.app.models.ReportEntry2;
@@ -41,10 +42,9 @@ public class ProcessingCamtFile extends HttpServlet {
 
 	public String uploadPath;
 	private Gson gson = new Gson();
-    private AccountingApi accountingApi = null;
+	private AccountingApi accountingApi = null;
 	public static final String FILES_FOLDER = "/Images";
 	private static final long serialVersionUID = 1273074928096412095L;
-
 
 	public ProcessingCamtFile() {
 		super();
@@ -55,7 +55,7 @@ public class ProcessingCamtFile extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse resp) throws ServletException, IOException {
 
 		Part part = null;
-		
+
 		if (request.getParts().size() > 0)
 			part = request.getParts().iterator().next();
 		else
@@ -64,16 +64,18 @@ public class ProcessingCamtFile extends HttpServlet {
 		try {
 
 			HttpSession session = request.getSession(false);
-            
-	        ApiClient defaultClient = new ApiClient();
-	        defaultClient.setConnectionTimeout(6000);
-	        accountingApi = AccountingApi.getInstance(defaultClient);
-	        
-			Accounts accounts = accountingApi.getAccounts(session.getAttribute("access_token").toString(), session.getAttribute("xero_tenant_id").toString(), null, null, null);
 
-			List<Account> accountList = accounts.getAccounts().stream().filter(a -> "BANK".equals(a.getType().toString().toString())).collect(Collectors.toList());
-            session.setAttribute("accounts", this.gson.toJson(accountList));
-            session.setAttribute("accountsUnparsed", accountList);
+			ApiClient defaultClient = new ApiClient();
+			defaultClient.setConnectionTimeout(6000);
+			accountingApi = AccountingApi.getInstance(defaultClient);
+
+			Accounts accounts = accountingApi.getAccounts(session.getAttribute("access_token").toString(),
+					session.getAttribute("xero_tenant_id").toString(), null, null, null);
+
+			List<Account> accountList = accounts.getAccounts().stream()
+					.filter(a -> "BANK".equals(a.getType().toString().toString())).collect(Collectors.toList());
+			session.setAttribute("accounts", this.gson.toJson(accountList));
+			session.setAttribute("accountsUnparsed", accountList);
 
 			XMLInputFactory xif = XMLInputFactory.newFactory();
 			xif.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
@@ -84,7 +86,7 @@ public class ProcessingCamtFile extends HttpServlet {
 			JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class);
 
 			Unmarshaller unmarshaller = jc.createUnmarshaller();
-            
+
 			Document document = ((JAXBElement<Document>) unmarshaller.unmarshal(xsr)).getValue();
 
 			Marshaller marshaller = jc.createMarshaller();
@@ -93,7 +95,7 @@ public class ProcessingCamtFile extends HttpServlet {
 			List<List<Map<String, String>>> entries = new ArrayList<>();
 
 			List<ReportEntry2> list;
-			if(document.getBkToCstmrStmt() != null)
+			if (document.getBkToCstmrStmt() != null)
 				list = document.getBkToCstmrStmt().getStmt().get(0).getNtry();
 			else
 				list = document.getBkToCstmrDbtCdtNtfctn().getNtfctn().get(0).getNtry();
@@ -106,7 +108,7 @@ public class ProcessingCamtFile extends HttpServlet {
 				date.put("label", "Transaction Date");
 				date.put("fieldName", "transactionDate");
 				date.put("value", ntry.getValDt().getDt().toString());
-				date.put("targetColumn", null);
+				date.put("targetColumn", "transactionDate");
 				item.add(date);
 
 				Map<String, String> amount = new HashMap<String, String>();
@@ -118,8 +120,19 @@ public class ProcessingCamtFile extends HttpServlet {
 				Map<String, String> payee = new HashMap<String, String>();
 				payee.put("label", "Payee");
 				payee.put("fieldName", "payee");
-				payee.put("value", "payee");
-				payee.put("targetColumn", null);
+				try {
+					payee.put("value",
+							ntry.getCdtDbtInd().equals(CreditDebitCode.CRDT)
+									? ntry.getNtryDtls().get(0).getTxDtls()
+											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
+											.getDbtr().getNm()
+									: ntry.getNtryDtls().get(0).getTxDtls()
+											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
+											.getCdtr().getNm());
+				} catch (Exception e) {
+					payee.put("value", "");
+				}
+				payee.put("targetColumn", "payee");
 				item.add(payee);
 
 				Map<String, String> description = new HashMap<String, String>();
@@ -132,15 +145,28 @@ public class ProcessingCamtFile extends HttpServlet {
 				Map<String, String> reference = new HashMap<String, String>();
 				reference.put("label", "Reference");
 				reference.put("fieldName", "reference");
-				reference.put("targetColumn", null);
-				reference.put("value", ntry.getAcctSvcrRef());
+				reference.put("targetColumn", "reference");
+				try {
+					reference.put("value",
+							ntry.getNtryDtls().get(0).getTxDtls().get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1)
+									.getRmtInf().getStrd().get(0).getCdtrRefInf().getRef() != null
+											? ntry.getNtryDtls().get(0).getTxDtls()
+													.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRmtInf()
+													.getStrd().get(0).getCdtrRefInf().getRef()
+											: ntry.getNtryDtls().get(0).getTxDtls()
+													.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRmtInf()
+													.getUstrd().get(0));
+				} catch (Exception e) {
+					reference.put("value", "");
+				}
+
 				item.add(reference);
 
 				Map<String, String> code = new HashMap<String, String>();
 				code.put("label", "Analysis code");
 				code.put("fieldName", "AnalysisCode");
-				code.put("targetColumn", null);
-				code.put("value", ntry.getAmt().getValue().intValue() > 0 ? "CRT" : "DBT");
+				code.put("targetColumn", "analysisCode");
+				code.put("value", ntry.getCdtDbtInd().toString());
 				item.add(code);
 
 				entries.add(item);
