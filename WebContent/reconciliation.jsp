@@ -13,11 +13,15 @@
                 <h2>
                     Select account to feed
                 </h2>
-                <select class="accounts" id="accounts" onchange='changeAccount(this)'>
-                    <option></option>
-                    <option>Bank Main Accounts</option>
-                    <option>Bank Savings Accounts</option>
-                </select>
+                <select class="accounts" id="accounts" onchange='changeAccount(this)'></select>
+
+                <div id="currencyWarning" style="margin-bottom: 5%;margin-top: 5%;display: none">
+                    <p style="font-size: 1.3em; color: red">
+                        Warning: Some transaction do not have the same currency than the selected account, please convert the corresponding
+                        amount to fix the issue or ignore if you think it is ok.
+                    </p>
+                </div>
+
                 <div class="file">
                     <h2>
                         Statement lines imported from your file...
@@ -36,7 +40,6 @@
                                 Statement Lines
                             </legend>
 
-
                             <table class="data">
                                 <thead>
                                 <tr>
@@ -47,12 +50,11 @@
                                 <tbody id="entries"></tbody>
                             </table>
 
-
                             <div class="checkbox option">
-                                <div><input name="firstRowImport" id="firstRowImport" type="checkBox" checked></div>
-                                <label
-                                        for="firstRowImport">Don't import the first line because they are column
-                                    headings</label>
+                                <div>
+                                    <input name="skipImport" id="skipImport" type="checkBox" onchange="onSkipTransaction(this);">
+                                </div>
+                                <label for="skipImport">Do not import this transaction</label>
                             </div>
                         </fieldset>
                         <div class="actions">
@@ -82,10 +84,13 @@
 <script>
     var entries = ${ sessionScope.entries };
     var accounts = ${ sessionScope.accounts };
+    var contacts = ${ sessionScope.contacts };
     var currentEntry = entries[0];
+    var currencies = [...new Set(entries.map(entry => entry[2].value))];
     var account = null;
+    const skipIndex = 6;
 
-    displayCurrentEntry(currentEntry);
+    displayCurrentEntry(currentEntry, account);
     displayAccounts(accounts);
 
     function changeEntryPosition(increment) {
@@ -101,14 +106,22 @@
         document.getElementById("entries").innerHTML = "";
         currentPage.innerHTML = currentPosition;
         currentEntry = entries[currentPosition - 1];
-        displayCurrentEntry(currentEntry);
+        document.getElementById("skipImport").checked = (currentEntry[skipIndex].value)+"" == "true";
+        displayCurrentEntry(currentEntry, account);
+    }
+
+    function onSkipTransaction(e) {
+        currentEntry[skipIndex].value = e.checked ;
+        entries[Number(document.getElementById("currentPage").innerHTML) - 1] = currentEntry;
     }
 
     function changeAccount(e) {
-        if (e.value === '-1')
+        if (e.value === '-1') {
             account = null;
-        else
-            account = e.value;
+        } else {
+            account = accounts.find(a => a.accountID == e.value);
+            displayCurrentEntry(currentEntry, account);
+        }
     }
 
     function submitForm() {
@@ -117,7 +130,7 @@
             return;
         }
         document.getElementById("buttons").innerHTML = "<a class='successBtn'><div class='loader'></div></a>";
-        var url = "reconciliation?accountID="+account;
+        var url = "reconciliation?accountID="+account.accountID;
         $.ajax({
             type: 'POST',
             url: url,
@@ -125,7 +138,6 @@
             dataType: 'json',
             data: JSON.stringify(entries),
             success: function (data) {
-                console.log(data);
                 document.getElementById("buttons").innerHTML =
                     "<a onclick='submitForm();' id='saveButton' class='successBtn'>Save</a>" +
                     "<a href='./import-file' class='cancelBtn'>Cancel</a>";

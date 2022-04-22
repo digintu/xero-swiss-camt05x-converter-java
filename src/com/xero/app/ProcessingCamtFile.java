@@ -33,6 +33,7 @@ import com.xero.app.models.ObjectFactory;
 import com.xero.app.models.ReportEntry2;
 import com.xero.models.accounting.Account;
 import com.xero.models.accounting.Accounts;
+import com.xero.models.accounting.Contacts;
 import com.xero.models.identity.Connection;
 
 // Get camt file and convert to CSV
@@ -117,18 +118,27 @@ public class ProcessingCamtFile extends HttpServlet {
 				amount.put("value", ntry.getAmt().getValue().toString());
 				amount.put("targetColumn", "transactionAmount");
 				item.add(amount);
+
+				Map<String, String> currency = new HashMap<String, String>();
+				currency.put("label", "Currency");
+				currency.put("fieldName", "Currency");
+				currency.put("targetColumn", "currency");
+				currency.put("value", ntry.getAmt().getCcy());
+				item.add(currency);
+
 				Map<String, String> payee = new HashMap<String, String>();
 				payee.put("label", "Payee");
 				payee.put("fieldName", "payee");
 				try {
-					payee.put("value",
-							ntry.getCdtDbtInd().equals(CreditDebitCode.CRDT)
-									? ntry.getNtryDtls().get(0).getTxDtls()
-											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
-											.getDbtr().getNm()
-									: ntry.getNtryDtls().get(0).getTxDtls()
-											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
-											.getCdtr().getNm());
+					payee.put("value", "");
+//					payee.put("value",
+//							ntry.getCdtDbtInd().equals(CreditDebitCode.CRDT)
+//									? ntry.getNtryDtls().get(0).getTxDtls()
+//											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
+//											.getDbtr().getNm()
+//									: ntry.getNtryDtls().get(0).getTxDtls()
+//											.get(ntry.getNtryDtls().get(0).getTxDtls().size() - 1).getRltdPties()
+//											.getCdtr().getNm());
 				} catch (Exception e) {
 					payee.put("value", "");
 				}
@@ -169,11 +179,21 @@ public class ProcessingCamtFile extends HttpServlet {
 				code.put("value", ntry.getCdtDbtInd().toString());
 				item.add(code);
 
+				Map<String, String> skip = new HashMap<String, String>();
+				code.put("label", "skip");
+				code.put("fieldName", "skip");
+				code.put("targetColumn", "skip");
+				code.put("value", "false");
+				item.add(skip);
+
 				entries.add(item);
 				i++;
 			}
 
+			Contacts contactsAll = accountingApi.getContacts(session.getAttribute("access_token").toString(), session.getAttribute("xero_tenant_id").toString(), null, null, null, null, null, null, null, null);
+			
 			session.setAttribute("entries", this.gson.toJson(entries));
+			session.setAttribute("contacts", this.gson.toJson(contactsAll.getContacts()));
 			session.setAttribute("size", entries.size());
 			session.setMaxInactiveInterval(30 * 60);
 
