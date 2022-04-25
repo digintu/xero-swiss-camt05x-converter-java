@@ -180,10 +180,10 @@ public class ProcessingCamtFile extends HttpServlet {
 				item.add(code);
 
 				Map<String, String> skip = new HashMap<String, String>();
-				code.put("label", "skip");
-				code.put("fieldName", "skip");
-				code.put("targetColumn", "skip");
-				code.put("value", "false");
+				skip.put("label", "skip");
+				skip.put("fieldName", "skip");
+				skip.put("targetColumn", "skip");
+				skip.put("value", "false");
 				item.add(skip);
 
 				entries.add(item);
@@ -194,6 +194,7 @@ public class ProcessingCamtFile extends HttpServlet {
 			
 			session.setAttribute("entries", this.gson.toJson(entries));
 			session.setAttribute("contacts", this.gson.toJson(contactsAll.getContacts()));
+			session.setAttribute("unparsedContacts", contactsAll.getContacts());
 			session.setAttribute("size", entries.size());
 			session.setMaxInactiveInterval(30 * 60);
 

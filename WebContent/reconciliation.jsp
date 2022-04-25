@@ -88,7 +88,7 @@
     var currentEntry = entries[0];
     var currencies = [...new Set(entries.map(entry => entry[2].value))];
     var account = null;
-    const skipIndex = 6;
+    const skipIndex = 7;
 
     displayCurrentEntry(currentEntry, account);
     displayAccounts(accounts);
@@ -111,7 +111,7 @@
     }
 
     function onSkipTransaction(e) {
-        currentEntry[skipIndex].value = e.checked ;
+        currentEntry[skipIndex].value = e.checked+"" ;
         entries[Number(document.getElementById("currentPage").innerHTML) - 1] = currentEntry;
     }
 
@@ -129,6 +129,12 @@
             alert('Please select the account to feed');
             return;
         }
+
+        if(entries.filter(ntry => !ntry[3].value).length > 0) {
+            alert('Please select the payee of every transaction');
+            return;
+        }
+
         document.getElementById("buttons").innerHTML = "<a class='successBtn'><div class='loader'></div></a>";
         var url = "reconciliation?accountID="+account.accountID;
         $.ajax({

@@ -10,7 +10,7 @@ function displayCurrentEntry(entry, account) {
 
         if(ntry.targetColumn === "transactionAmount") {
             tableBodyContent += "<td class='dataValue'>" +
-                "<input type='number' value='" + ntry.value + "' id='amount-"+index+"' style='width: 92%' />" +
+                "<input type='number' value='" + ntry.value + "' id='amount-"+index+"' style='width: 92%' onchange='changeItemAmount(this)' />" +
                 "</td>";
         } else {
             if(ntry.targetColumn === "currency") {
@@ -79,8 +79,8 @@ function displayCurrentEntry(entry, account) {
     "</tr>"+
     "<tr class='"+getOptionStatus(entry, "payee", null, true)+"'>"+
     "<td class='item'><em class='icons'>&nbsp;</em>Payee</td>"+
-    "<td>"+contacts.find(c => c.contactID === getPreviewValue(entry, "payee")) ?
-        contacts.find(c => c.contactID === getPreviewValue(entry, "payee")).name : "" +"</td>"+
+    "<td>"+(contacts.find(c => c.contactID === getPreviewValue(entry, "payee")) ?
+        contacts.find(c => c.contactID === getPreviewValue(entry, "payee")).name : "" )+"</td>"+
     "</tr>"+
     "<tr class='"+getOptionStatus(entry, "description", null, true)+"'>"+
     "<td class='item'><em class='icons'>&nbsp;</em>Description</td>"+
@@ -174,6 +174,12 @@ function changeItemCurrency(e) {
 
 function changeItemPayee(e) {
     currentEntry[3].value = e.value;
+    entries[Number(document.getElementById("currentPage").innerHTML) - 1] = currentEntry;
+    displayCurrentEntry(currentEntry, account);
+}
+
+function changeItemAmount(e) {
+    currentEntry[1].value = e.value;
     entries[Number(document.getElementById("currentPage").innerHTML) - 1] = currentEntry;
     displayCurrentEntry(currentEntry, account);
 }

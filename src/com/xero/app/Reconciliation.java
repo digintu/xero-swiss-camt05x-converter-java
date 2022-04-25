@@ -3,6 +3,8 @@ package com.xero.app;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ import javax.servlet.http.HttpSession;
 import org.apache.http.NoHttpResponseException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.threeten.bp.Instant;
+import org.threeten.bp.ZoneId;
 
 import com.google.gson.Gson;
 import com.xero.api.ApiClient;
@@ -32,6 +36,7 @@ import com.xero.models.accounting.BankTransaction;
 import com.xero.models.accounting.BankTransactions;
 import com.xero.models.accounting.Contact;
 import com.xero.models.accounting.Contacts;
+import com.xero.models.accounting.CurrencyCode;
 import com.xero.models.accounting.LineItem;
 
 @WebServlet(urlPatterns = "/reconciliation")
@@ -138,6 +143,7 @@ public class Reconciliation extends HttpServlet {
 							customEntryItem.setFieldName(jsonObject.getString("fieldName"));
 						if (jsonObject.has("targetColumn"))
 							customEntryItem.setTargetColumn(jsonObject.getString("targetColumn"));
+//						System.out.println(jsonObject.getString("targetColumn"));
 						if (jsonObject.has("value"))
 							customEntryItem.setValue(jsonObject.getString("value"));
 						customEntry.addItem(customEntryItem);
@@ -147,16 +153,27 @@ public class Reconciliation extends HttpServlet {
 			}
 		}
 
-		for (CustomEntry customEntry : customEntryList) {
-			for (CustomEntryItem customEntryItem : customEntry.getCustomEntryItems()) {
-				if (customEntryItem.getTargetColumn() != null) {
-					System.out.println("Le " + customEntryItem.getLabel() + " est définie à "
-							+ customEntryItem.getTargetColumn() + " et sa valeur est " + customEntryItem.getValue());
-				}
-			}
-		}
+//		for (CustomEntry customEntry : customEntryList) {
+//			for (CustomEntryItem customEntryItem : customEntry.getCustomEntryItems()) {
+//				if (customEntryItem.getTargetColumn() != null) {
+//					System.out.println("Le " + customEntryItem.getLabel() + " est définie à "
+//							+ customEntryItem.getTargetColumn() + " et sa valeur est " + customEntryItem.getValue());
+//				}
+//			}
+//		}
+//
+//		if(customEntryList != null) {
+//			PrintWriter outx = response.getWriter();
+//			response.setContentType("application/json");
+//			response.setCharacterEncoding("UTF-8");
+//			outx.print(this.gson.toJson("ok"));
+//			outx.flush();
+//			return;
+//		}
 
+		@SuppressWarnings("unused")
 		List<Account> accountList = (List<Account>) session.getAttribute("accountsUnparsed");
+		List<Contact> contactList = (List<Contact>) session.getAttribute("unparsedContacts");
 
 		Account account = accountList.stream()
 				.filter(a -> a.getAccountID().toString().equals(request.getParameter("accountID")))
@@ -183,6 +200,8 @@ public class Reconciliation extends HttpServlet {
 			for (CustomEntry customEntry : customEntryList) {
 				CustomEntryItem unitAmount = customEntry.getCustomEntryItems().stream()
 						.filter(cei -> "transactionAmount".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem unitCurrency = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "currency".equals(cei.getTargetColumn())).findFirst().orElse(null);
 				CustomEntryItem description = customEntry.getCustomEntryItems().stream()
 						.filter(cei -> "description".equals(cei.getTargetColumn())).findFirst().orElse(null);
 				CustomEntryItem analysisCode = customEntry.getCustomEntryItems().stream()
@@ -193,7 +212,12 @@ public class Reconciliation extends HttpServlet {
 						.filter(cei -> "reference".equals(cei.getTargetColumn())).findFirst().orElse(null);
 				CustomEntryItem payee = customEntry.getCustomEntryItems().stream()
 						.filter(cei -> "payee".equals(cei.getTargetColumn())).findFirst().orElse(null);
+				CustomEntryItem skip = customEntry.getCustomEntryItems().stream()
+						.filter(cei -> "skip".equals(cei.getTargetColumn())).findFirst().orElse(null);
 
+				if(skip.getValue().equals("true"))
+					continue;
+				
 				if (payee !=null && reference != null && transactionDate != null && analysisCode != null && unitAmount != null && description != null) {
 					List<LineItem> lineItems = new ArrayList<>();
 
@@ -202,35 +226,37 @@ public class Reconciliation extends HttpServlet {
 					li.setUnitAmount(Double.valueOf(unitAmount.getValue()));
 					lineItems.add(li);
 					
-					Contact contact = new Contact();
-					contact.setName(payee.getValue());
+					Contact contact = contactList.stream().filter(c -> c.getContactID().toString().equals(payee.getValue())).findFirst().orElse(null);
 
 					BankTransaction bt = new BankTransaction();
 					bt.setBankAccount(bankAcct);
 					bt.setContact(useContact);
 					bt.setLineItems(lineItems);
 					bt.setContact(contact);
+					bt.setTotal(Double.valueOf(unitAmount.getValue()));
+					bt.setCurrencyCode(CurrencyCode.valueOf(unitCurrency.getValue()));
 					bt.setReference(reference.getValue());
-					bt.setDate(transactionDate.getValue());
+					bt.setDate(org.threeten.bp.LocalDate.parse(transactionDate.getValue()));
 					bt.setType(analysisCode.getValue().equals(CreditDebitCode.DBIT.toString())
 							? com.xero.models.accounting.BankTransaction.TypeEnum.SPEND
 							: com.xero.models.accounting.BankTransaction.TypeEnum.RECEIVE);
 
 					bts.addBankTransactionsItem(bt);
-					System.out.println(bt.toString());
+					//System.out.println(bt.toString());
 				}
 			}
 
 			if (bts.getBankTransactions().size() > 0) {
-//				BankTransactions newBankTransactions = accountingApi.createBankTransactions(
-//						session.getAttribute("access_token").toString(),
-//						session.getAttribute("xero_tenant_id").toString(), bts, false, 4);
+				BankTransactions newBankTransactions = accountingApi.createBankTransactions(
+						session.getAttribute("access_token").toString(),
+						session.getAttribute("xero_tenant_id").toString(), bts, false, 4);
 
-//				System.out.println("Create new BankTransactions: count: " + newBankTransactions.getBankTransactions().size());
+				System.out.println("Create new BankTransactions: count: " + newBankTransactions.getBankTransactions().size());
 				System.out.println(bts.getBankTransactions().size() + " transactions viables trouvées !");
 				session.setAttribute("entries", null);
 				session.setAttribute("accounts", null);
 				session.setAttribute("accountsUnparsed", null);
+				session.setAttribute("unparsedContacts", null);
 			} else {
 				System.out.println("Exception: no transaction to send");
 				throw new NoHttpResponseException("Account was not found");
